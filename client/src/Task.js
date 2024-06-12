@@ -1,17 +1,32 @@
-import { List , ListItem, ListItemAvatar, ListItemText } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import './Task.css';
 
-const Task=({taskText, onClick})=>{
+const TaskTable = ({ tasks, onDelete }) => {
     return (
-        <List className="todo__list"> 
-            <ListItem>
-                <ListItemAvatar />
-                    <ListItemText primary={taskText} />
-            </ListItem>
-            <DeleteIcon fontSize="large" style={{opacity:0.7}} onClick={onClick}/>
-        </List> 
-    )
+        <TableContainer component={Paper} className="task-table">
+            <Table>
+                <TableHead>
+                    <TableRow>
+                        <TableCell>ID</TableCell>
+                        <TableCell>Task</TableCell>
+                        <TableCell>Action</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {tasks.map((task) => (
+                        <TableRow key={task.id}>
+                            <TableCell>{task.id.toString()}</TableCell>
+                            <TableCell>{task.taskText}</TableCell>
+                            <TableCell>
+                                <DeleteIcon fontSize="large" style={{ opacity: 0.7, cursor: 'pointer' }} onClick={() => onDelete(task.id)} />
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </TableContainer>
+    );
 };
 
-export default Task;
+export default TaskTable;

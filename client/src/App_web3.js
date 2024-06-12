@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button } from '@mui/material';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import TaskTable from './Task.js';
 import './App.css';
 
@@ -47,7 +45,7 @@ function App() {
       const { ethereum } = window;
 
       if (!ethereum) {
-        toast.error('Metamask not detected');
+        console.log('Metamask not detected');
         return;
       }
       let chainId = await ethereum.request({ method: 'eth_chainId' });
@@ -66,7 +64,6 @@ function App() {
 
       console.log('Found account', accounts[0]);
       setCurrentAccount(accounts[0]);
-      toast.success('Wallet connected');
     } catch (error) {
       console.log('Error connecting to metamask', error);
     }
@@ -90,15 +87,15 @@ function App() {
 
         await TaskContract.methods.addTask(task.taskText, task.isDeleted).send({ from: currentAccount });
         setTasks([...tasks, task]);
-        setInput('');
-        toast.success('Task added');
+        console.log("Completed Task");
       } else {
         console.log("Ethereum object doesn't exist!");
       }
     } catch (error) {
       console.log("Error submitting new Task", error);
-      toast.error('Error adding task');
     }
+
+    setInput('');
   };
 
   const deleteTask = async (taskId) => {
@@ -117,19 +114,16 @@ function App() {
           isDeleted: task.isDeleted
         }));
         setTasks(allTasks);
-        toast.success('Task deleted');
       } else {
         console.log("Ethereum object doesn't exist");
       }
     } catch (error) {
       console.log(error);
-      toast.error('Error deleting task');
     }
   };
 
   return (
     <div>
-      <ToastContainer />
       {currentAccount === '' ? (
         <Button
           variant="contained"
