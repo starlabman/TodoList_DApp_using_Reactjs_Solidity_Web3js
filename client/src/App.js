@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button } from '@mui/material';
+import { Container, Box, Typography, TextField, Button, AppBar, Toolbar, IconButton } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import TaskTable from './Task.js';
-import './App.css';
+import TaskTable from './Task';
+// import './App.css';
 
-import { TaskContractAddress } from './config.js';
+import { TaskContractAddress } from './config';
 import Web3 from 'web3';
 import TaskAbi from './utils/TaskContract.json';
 
@@ -27,6 +28,9 @@ function App() {
         allTasks = allTasks.map(task => ({
           id: task.id.toString(),
           taskText: task.taskText,
+          wallet: task.wallet,
+          taskDate: new Date(task.taskDate * 1000).toLocaleDateString(),
+          taskTime: new Date(task.taskDate * 1000).toLocaleTimeString(),
           isDeleted: task.isDeleted
         }));
         setTasks(allTasks);
@@ -130,34 +134,51 @@ function App() {
   return (
     <div>
       <ToastContainer />
-      {currentAccount === '' ? (
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          className="connect-wallet-button"
-          onClick={connectWallet}
-        >
-          Connect Wallet
-        </Button>
-      ) : correctNetwork ? (
-        <div className="App">
-          <h2> Task Management App</h2>
-          <form>
-            <TextField id="outlined-basic" label="Make Todo" variant="outlined" style={{ margin: "0px 5px" }} size="small" value={input}
-              onChange={e => setInput(e.target.value)} />
-            <Button variant="contained" color="primary" onClick={addTask}>Add Task</Button>
-          </form>
-          <TaskTable tasks={tasks} onDelete={deleteTask} />
-        </div>
-      ) : (
-        <div className='flex flex-col justify-center items-center mb-20 font-bold text-2xl gap-y-3'>
-          <div>----------------------------------------</div>
-          <div>Please connect to the Sepolia Testnet</div>
-          <div>and reload the page</div>
-          <div>----------------------------------------</div>
-        </div>
-      )}
+      <AppBar position="static">
+        <Toolbar>
+          <IconButton edge="start" color="inherit" aria-label="menu">
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" style={{ flexGrow: 1 }}>
+            Task Management App
+          </Typography>
+          {currentAccount === '' ? (
+            <Button color="inherit" onClick={connectWallet}>Connect Wallet</Button>
+          ) : (
+            <Typography variant="h6">{currentAccount}</Typography>
+          )}
+        </Toolbar>
+      </AppBar>
+      <Container>
+        {currentAccount === '' ? (
+          <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+            <Button variant="contained" color="primary" size="large" onClick={connectWallet}>
+              Connect Wallet
+            </Button>
+          </Box>
+        ) : correctNetwork ? (
+          <Box mt={4}>
+            <Typography variant="h4" align="center" gutterBottom>Task Management</Typography>
+            <Box component="form" onSubmit={addTask} display="flex" justifyContent="center" mb={2}>
+              <TextField 
+                id="outlined-basic" 
+                label="New Task" 
+                variant="outlined" 
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                style={{ marginRight: 8 }}
+              />
+              <Button variant="contained" color="primary" type="submit">Add Task</Button>
+            </Box>
+            <TaskTable tasks={tasks} onDelete={deleteTask} />
+          </Box>
+        ) : (
+          <Box display="flex" flexDirection="column" alignItems="center" mt={4}>
+            <Typography variant="h6" color="error">Please connect to the Sepolia Testnet</Typography>
+            <Typography variant="subtitle1">and reload the page</Typography>
+          </Box>
+        )}
+      </Container>
     </div>
   );
 }
