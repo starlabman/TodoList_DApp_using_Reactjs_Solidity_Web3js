@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Box, Typography, TextField, Button, AppBar, Toolbar, IconButton } from '@mui/material';
-import TaskTable from './Task';
 import MenuIcon from '@mui/icons-material/Menu';
-import { toast, ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { TaskContractAddress } from './config.js';
+import TaskTable from './Task';
+// import './App.css';
+
+import { TaskContractAddress } from './config';
 import Web3 from 'web3';
 import TaskAbi from './utils/TaskContract.json';
 
@@ -14,16 +16,16 @@ function App() {
   const [currentAccount, setCurrentAccount] = useState('');
   const [correctNetwork, setCorrectNetwork] = useState(false);
 
-  const getAllTasks = useCallback(async () => {
+  const getAllTasks = async () => {
     try {
       const { ethereum } = window;
 
       if (ethereum) {
         const web3 = new Web3(ethereum);
         const TaskContract = new web3.eth.Contract(TaskAbi.abi, TaskContractAddress);
-        const allTasks = await TaskContract.methods.getMyTasks().call({ from: currentAccount });
 
-        const tasks = allTasks.map(task => ({
+        let allTasks = await TaskContract.methods.getMyTasks().call();
+        allTasks = allTasks.map(task => ({
           id: task.id.toString(),
           taskText: task.taskText,
           wallet: task.wallet,
@@ -31,21 +33,18 @@ function App() {
           taskTime: new Date(task.taskDate * 1000).toLocaleTimeString(),
           isDeleted: task.isDeleted
         }));
-
-        setTasks(tasks);
+        setTasks(allTasks);
       } else {
-        toast.error("Ethereum object doesn't exist");
+        console.log("Ethereum object doesn't exist");
       }
     } catch (error) {
-      toast.error("Failed to fetch tasks");
+      console.log(error);
     }
-  }, [currentAccount]);
+  };
 
   useEffect(() => {
-    if (currentAccount) {
-      getAllTasks();
-    }
-  }, [currentAccount, getAllTasks]);
+    getAllTasks();
+  }, []);
 
   const connectWallet = async () => {
     try {
@@ -61,7 +60,7 @@ function App() {
       const sepoliaChainId = '0xaa36a7';
 
       if (chainId !== sepoliaChainId) {
-        toast.error('You are not connected to the Sepolia Testnet!');
+        alert('You are not connected to the Sepolia Testnet!');
         return;
       } else {
         setCorrectNetwork(true);
@@ -73,7 +72,7 @@ function App() {
       setCurrentAccount(accounts[0]);
       toast.success('Wallet connected');
     } catch (error) {
-      toast.error('Error connecting to metamask');
+      console.log('Error connecting to metamask', error);
     }
   };
 
@@ -81,9 +80,9 @@ function App() {
     e.preventDefault();
 
     const task = {
-      id: tasks.length + 1,
-      taskText: input,
-      isDeleted: false
+      'id': tasks.length + 1,
+      'taskText': input,
+      'isDeleted': false
     };
 
     try {
@@ -95,15 +94,15 @@ function App() {
 
         await TaskContract.methods.addTask(task.taskText, task.isDeleted).send({ from: currentAccount });
         setTasks([...tasks, task]);
-        toast.success("Task added successfully");
+        setInput('');
+        toast.success('Task added');
       } else {
-        toast.error("Ethereum object doesn't exist!");
+        console.log("Ethereum object doesn't exist!");
       }
     } catch (error) {
-      toast.error("Error submitting new Task");
+      console.log("Error submitting new Task", error);
+      toast.error('Error adding task');
     }
-
-    setInput('');
   };
 
   const deleteTask = async (taskId) => {
@@ -115,14 +114,20 @@ function App() {
         const TaskContract = new web3.eth.Contract(TaskAbi.abi, TaskContractAddress);
 
         await TaskContract.methods.deleteTask(taskId, true).send({ from: currentAccount });
-        const updatedTasks = tasks.filter(task => task.id !== taskId);
-        setTasks(updatedTasks);
-        toast.success("Task deleted successfully");
+        let allTasks = await TaskContract.methods.getMyTasks().call();
+        allTasks = allTasks.map(task => ({
+          id: task.id.toString(),
+          taskText: task.taskText,
+          isDeleted: task.isDeleted
+        }));
+        setTasks(allTasks);
+        toast.success('Task deleted');
       } else {
-        toast.error("Ethereum object doesn't exist");
+        console.log("Ethereum object doesn't exist");
       }
     } catch (error) {
-      toast.error("Error deleting task");
+      console.log(error);
+      toast.error('Error deleting task');
     }
   };
 
